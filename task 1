@@ -1,0 +1,49 @@
+import java.util.Scanner;
+
+public class SalaryTransformationSystem {
+
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("===== SALARY TRANSFORMATION SYSTEM =====");
+
+        System.out.print("Enter Employee Name: ");
+        String name = sc.nextLine();
+
+        System.out.print("Enter Basic Salary: ");
+        double basicSalary = sc.nextDouble();
+
+        // Salary components
+        double hra = basicSalary * 0.20;       // 20% HRA
+        double da = basicSalary * 0.10;        // 10% DA
+        double bonus = basicSalary * 0.05;     // 5% Bonus
+
+        // Gross salary
+        double grossSalary = basicSalary + hra + da + bonus;
+
+        // Deductions
+        double pf = basicSalary * 0.12;        // 12% PF
+        double tax = grossSalary * 0.05;       // 5% Tax
+
+        double totalDeductions = pf + tax;
+
+        // Net salary
+        double netSalary = grossSalary - totalDeductions;
+
+        // Display result
+        System.out.println("\n===== SALARY DETAILS =====");
+        System.out.println("Employee Name     : " + name);
+        System.out.printf("Basic Salary      : %.2f%n", basicSalary);
+        System.out.printf("HRA (20%%)          : %.2f%n", hra);
+        System.out.printf("DA (10%%)           : %.2f%n", da);
+        System.out.printf("Bonus (5%%)         : %.2f%n", bonus);
+        System.out.printf("Gross Salary       : %.2f%n", grossSalary);
+        System.out.printf("PF (12%%)           : %.2f%n", pf);
+        System.out.printf("Tax (5%%)           : %.2f%n", tax);
+        System.out.printf("Total Deductions   : %.2f%n", totalDeductions);
+        System.out.printf("Net Salary         : %.2f%n", netSalary);
+
+        sc.close();
+    }
+}
