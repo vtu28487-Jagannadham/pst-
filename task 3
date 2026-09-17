@@ -1,0 +1,50 @@
+import java.util.*;
+
+public class Main {
+
+    // 1. Single Transaction: Max profit from 1 Buy + 1 Sell
+    public static double maxProfitSingleTransaction(double[] prices) {
+        if (prices == null || prices.length < 2) return 0.0;
+
+        double minPrice = prices[0];
+        double maxProfit = 0.0;
+
+        for (int i = 1; i < prices.length; i++) {
+            double currentProfit = prices[i] - minPrice;
+            maxProfit = Math.max(maxProfit, currentProfit);
+            minPrice = Math.min(minPrice, prices[i]);
+        }
+
+        return maxProfit;
+    }
+
+    // 2. Multiple Transactions: Max profit from unlimited Buy + Sell pairs
+    public static double maxProfitMultipleTransactions(double[] prices) {
+        if (prices == null || prices.length < 2) return 0.0;
+
+        double totalProfit = 0.0;
+
+        for (int i = 1; i < prices.length; i++) {
+            if (prices[i] > prices[i - 1]) {
+                totalProfit += prices[i] - prices[i - 1]; // Capture every upward move
+            }
+        }
+
+        return totalProfit;
+    }
+
+    public static void main(String[] args) {
+        // Price stream data (e.g., daily stock prices)
+        double[] stockPrices = {7.0, 1.0, 5.0, 3.0, 6.0, 4.0, 9.0};
+
+        System.out.println("--- Maximum Profit Analyzer ---");
+        System.out.println("Price Stream: " + Arrays.toString(stockPrices));
+
+        double singleProfit = maxProfitSingleTransaction(stockPrices);
+        double multiProfit = maxProfitMultipleTransactions(stockPrices);
+
+        System.out.println("\nResults:");
+        System.out.printf("Max Profit (Single Transaction)    : $%.2f%n", singleProfit);
+        System.out.printf("Max Profit (Multiple Transactions)  : $%.2f%n", multiProfit);
+    }
+}
