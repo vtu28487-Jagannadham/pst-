@@ -1,0 +1,23 @@
+import java.util.HashMap;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        // Array of items to count
+        String[] items = {"apple", "banana", "apple", "orange", "banana", "apple"};
+
+        // Create a HashMap to store element frequencies
+        Map<String, Integer> frequencyMap = new HashMap<>();
+
+        // Count frequencies using Hashing
+        for (String item : items) {
+            frequencyMap.put(item, frequencyMap.getOrDefault(item, 0) + 1);
+        }
+
+        // Display results
+        System.out.println("=== Element Frequency Count ===");
+        for (Map.Entry<String, Integer> entry : frequencyMap.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
+    }
+}
