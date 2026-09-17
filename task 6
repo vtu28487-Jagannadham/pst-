@@ -1,0 +1,75 @@
+import java.util.*;
+
+// Represents a Driver
+class Driver {
+    String name;
+    boolean isAvailable = true;
+
+    public Driver(String name) {
+        this.name = name;
+    }
+}
+
+// Represents a Rider
+class Rider {
+    String name;
+
+    public Rider(String name) {
+        this.name = name;
+    }
+}
+
+// Ride Sharing Platform Simulator
+public class Main {
+    private List<Driver> drivers = new ArrayList<>();
+
+    public void addDriver(Driver driver) {
+        drivers.add(driver);
+    }
+
+    // Finds the first available driver and requests a ride
+    public void requestRide(Rider rider, String pickup, String destination, double fare) {
+        System.out.printf("%n[RIDE REQUEST] %s wants a ride from %s to %s ($%.2f)%n", 
+                rider.name, pickup, destination, fare);
+
+        Driver assignedDriver = null;
+        for (Driver driver : drivers) {
+            if (driver.isAvailable) {
+                assignedDriver = driver;
+                driver.isAvailable = false; // Mark driver as busy
+                break;
+            }
+        }
+
+        if (assignedDriver != null) {
+            System.out.printf(" -> Ride Accepted! Driver %s is on the way to pick up %s.%n", 
+                    assignedDriver.name, rider.name);
+            System.out.printf(" -> Trip completed! %s paid $%.2f to %s.%n", 
+                    rider.name, fare, assignedDriver.name);
+            
+            assignedDriver.isAvailable = true; // Driver is now available again
+        } else {
+            System.out.println(" -> No drivers available right now. Please try again later.");
+        }
+    }
+
+    public static void main(String[] args) {
+        Main platform = new Main();
+
+        // Add registered drivers to system
+        platform.addDriver(new Driver("Alex"));
+        platform.addDriver(new Driver("Sam"));
+
+        // Create riders
+        Rider rider1 = new Rider("John");
+        Rider rider2 = new Rider("Emma");
+        Rider rider3 = new Rider("Mike");
+
+        System.out.println("=== Ride Sharing Platform Simulator ===");
+
+        // Simulate ride requests
+        platform.requestRide(rider1, "Downtown", "Airport", 25.50);
+        platform.requestRide(rider2, "Mall", "Train Station", 12.00);
+        platform.requestRide(rider3, "University", "City Center", 18.75);
+    }
+}
