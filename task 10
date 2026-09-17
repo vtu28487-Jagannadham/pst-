@@ -1,0 +1,56 @@
+import java.util.Random;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class Main {
+
+    // Configuration
+    private static final int TOTAL_USERS = 50;
+    private static final int THREAD_POOL_SIZE = 5;
+    private static final int RATE_LIMIT_THRESHOLD = 30; // Max requests allowed before throttling
+
+    // Tracking Metrics
+    private static final AtomicInteger totalRequests = new AtomicInteger(0);
+    private static final AtomicInteger successCount = new AtomicInteger(0);
+    private static final AtomicInteger blockedCount = new AtomicInteger(0);
+
+    public static void main(String[] args) throws InterruptedException {
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        Random random = new Random();
+
+        System.out.println("--- STRESS TEST STARTED ---");
+
+        // Simulating simultaneous user login attempts
+        for (int i = 1; i <= TOTAL_USERS; i++) {
+            final int userId = i;
+            executor.submit(() -> {
+                int requestNum = totalRequests.incrementAndGet();
+
+                // Simulate authentication delay
+                try {
+                    Thread.sleep(random.nextInt(100) + 50); 
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+
+                // Simulate rate limiting behavior under load
+                if (requestNum > RATE_LIMIT_THRESHOLD) {
+                    blockedCount.incrementAndGet();
+                    System.out.println("User " + userId + ": [429] Rate Limit Exceeded - Blocked");
+                } else {
+                    successCount.incrementAndGet();
+                    System.out.println("User " + userId + ": [200] Authenticated Successfully");
+                }
+            });
+        }
+
+        executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.SECONDS);
+
+        // Display Summary
+        System.out.println("\n--- TEST SUMMARY ---");
+        System.out.println("Total Login Attempts: " + TOTAL_USERS);
+        System.out.println("Successful Authentications: " + successCount.get());
+        System.out.println("Blocked by Rate Limiter (HTTP 429): " + blockedCount.get());
+    }
+}
