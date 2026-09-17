@@ -1,0 +1,56 @@
+import java.util.*;
+
+public class Main {
+    // Edge class representing a road
+    static class Edge {
+        int destination, travelTime;
+        Edge(int destination, int travelTime) {
+            this.destination = destination;
+            this.travelTime = travelTime;
+        }
+    }
+
+    public static void findFastestRoute(List<List<Edge>> graph, int source, int destination, int numNodes) {
+        int[] distances = new int[numNodes];
+        Arrays.fill(distances, Integer.MAX_VALUE);
+        distances[source] = 0;
+
+        // Min-PriorityQueue to process nearest nodes first
+        PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));
+        pq.add(new int[]{source, 0});
+
+        while (!pq.isEmpty()) {
+            int[] current = pq.poll();
+            int u = current[0];
+            int dist = current[1];
+
+            if (dist > distances[u]) continue;
+            if (u == destination) break;
+
+            for (Edge edge : graph.get(u)) {
+                if (distances[u] + edge.travelTime < distances[edge.destination]) {
+                    distances[edge.destination] = distances[u] + edge.travelTime;
+                    pq.add(new int[]{edge.destination, distances[edge.destination]});
+                }
+            }
+        }
+
+        System.out.println("Shortest travel time from " + source + " to " + destination + ": " + distances[destination] + " mins");
+    }
+
+    public static void main(String[] args) {
+        int numNodes = 5; // Intersections 0, 1, 2, 3, 4
+        List<List<Edge>> graph = new ArrayList<>();
+        for (int i = 0; i < numNodes; i++) graph.add(new ArrayList<>());
+
+        // Add roads: addRoad(from, to, timeInMins)
+        graph.get(0).add(new Edge(1, 10)); // Node 0 -> Node 1 (10 mins)
+        graph.get(0).add(new Edge(2, 15)); // Node 0 -> Node 2 (15 mins)
+        graph.get(1).add(new Edge(3, 12)); // Node 1 -> Node 3 (12 mins)
+        graph.get(2).add(new Edge(3, 5));  // Node 2 -> Node 3 (5 mins)
+        graph.get(3).add(new Edge(4, 8));  // Node 3 -> Node 4 (8 mins)
+
+        // Find route from Node 0 to Node 4
+        findFastestRoute(graph, 0, 4, numNodes);
+    }
+}
