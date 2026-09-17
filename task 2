@@ -1,0 +1,115 @@
+import java.util.*;
+import java.util.concurrent.*;
+
+// 1. Data Event Representation
+class Event {
+    String deviceId;
+    double metricValue;
+    long timestamp;
+
+    public Event(String deviceId, double metricValue, long timestamp) {
+        this.deviceId = deviceId;
+        this.metricValue = metricValue;
+        this.timestamp = timestamp;
+    }
+}
+
+// 2. Stream Analytics Processing Engine
+public class Main {
+
+    // Thread-safe stream ingestion queue
+    private static final BlockingQueue<Event> streamBuffer = new LinkedBlockingQueue<>();
+
+    public static void main(String[] args) throws InterruptedException {
+        System.out.println("Starting Real-Time Stream Analytics Engine...\n");
+
+        // Producer Thread: Simulates continuous streaming events
+        Thread producer = new Thread(() -> {
+            Random random = new Random();
+            int eventId = 1;
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    String deviceId = "Sensor-" + (random.nextInt(3) + 1);
+                    double value = 10 + (random.nextDouble() * 90); // Metrics between 10.0 and 100.0
+                    Event event = new Event(deviceId, value, System.currentTimeMillis());
+
+                    streamBuffer.put(event);
+                    System.out.printf("[INGESTED] Event #%d | Device: %s | Value: %.2f%n", 
+                                      eventId++, deviceId, value);
+
+                    Thread.sleep(300); // Produces ~3 events per second
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+
+        // Analytics Processing Thread: Applies a 3-second Tumbling Window
+        Thread analyticsProcessor = new Thread(() -> {
+            long windowSizeMillis = 3000; // 3-second processing window
+            long windowStartTime = System.currentTimeMillis();
+
+            List<Event> currentWindow = new ArrayList<>();
+
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    // Drain incoming stream events with low latency timeout
+                    Event event = streamBuffer.poll(100, TimeUnit.MILLISECONDS);
+                    if (event != null) {
+                        currentWindow.add(event);
+                    }
+
+                    long currentTime = System.currentTimeMillis();
+
+                    // Evaluate time window boundary
+                    if (currentTime - windowStartTime >= windowSizeMillis) {
+                        processWindowAnalytics(currentWindow, windowStartTime, currentTime);
+                        currentWindow.clear();
+                        windowStartTime = currentTime; // Slide to next tumbling window
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+
+        // Start real-time pipeline execution
+        producer.start();
+        analyticsProcessor.start();
+
+        // Run engine for 10 seconds before shutting down
+        Thread.sleep(10000);
+        producer.interrupt();
+        analyticsProcessor.interrupt();
+
+        System.out.println("\nStream Analytics Engine stopped successfully.");
+    }
+
+    // Window Aggregation Logic
+    private static void processWindowAnalytics(List<Event> events, long startTime, long endTime) {
+        System.out.println("\n--- [WINDOW METRICS TRIGGERED] ---");
+        System.out.printf("Window Duration: %d ms | Total Events Processed: %d%n", 
+                          (endTime - startTime), events.size());
+
+        if (events.isEmpty()) {
+            System.out.println("No data points received in this window.\n-----------------------------------\n");
+            return;
+        }
+
+        // Aggregate statistics per device
+        Map<String, DoubleSummaryStatistics> statsMap = new HashMap<>();
+
+        for (Event event : events) {
+            statsMap.computeIfAbsent(event.deviceId, k -> new DoubleSummaryStatistics())
+                    .accept(event.metricValue);
+        }
+
+        statsMap.forEach((deviceId, stats) -> {
+            System.out.printf("  Device: %-8s | Count: %d | Avg: %.2f | Max: %.2f | Min: %.2f%n",
+                              deviceId, stats.getCount(), stats.getAverage(), 
+                              stats.getMax(), stats.getMin());
+        });
+
+        System.out.println("-----------------------------------\n");
+    }
+}
