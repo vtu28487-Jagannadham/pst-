@@ -1,0 +1,92 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class Main {
+
+    // Computes the Longest Prefix Suffix (LPS) array for the DNA pattern
+    private static int[] computeLPSArray(String pattern) {
+        int length = 0;
+        int i = 1;
+        int m = pattern.length();
+        int[] lps = new int[m];
+        lps[0] = 0; // lps[0] is always 0
+
+        while (i < m) {
+            if (pattern.charAt(i) == pattern.charAt(length)) {
+                length++;
+                lps[i] = length;
+                i++;
+            } else {
+                if (length != 0) {
+                    length = lps[length - 1]; // Fallback to previous longest prefix suffix
+                } else {
+                    lps[i] = 0;
+                    i++;
+                }
+            }
+        }
+        return lps;
+    }
+
+    // Executes KMP search to find all occurrences of a DNA motif/pattern in a sequence
+    public static List<Integer> searchDNAPattern(String dnaSequence, String pattern) {
+        List<Integer> matches = new ArrayList<>();
+        
+        if (pattern == null || dnaSequence == null || pattern.isEmpty() || dnaSequence.isEmpty()) {
+            return matches;
+        }
+
+        String sequenceUpper = dnaSequence.toUpperCase();
+        String patternUpper = pattern.toUpperCase();
+
+        int n = sequenceUpper.length();
+        int m = patternUpper.length();
+        int[] lps = computeLPSArray(patternUpper);
+
+        int i = 0; // Index for dnaSequence
+        int j = 0; // Index for pattern
+
+        while (i < n) {
+            if (patternUpper.charAt(j) == sequenceUpper.charAt(i)) {
+                i++;
+                j++;
+            }
+
+            if (j == m) {
+                // Match found at 0-based index (i - j)
+                matches.add(i - j);
+                j = lps[j - 1]; // Reset j using the LPS table to avoid re-checking
+            } else if (i < n && patternUpper.charAt(j) != sequenceUpper.charAt(i)) {
+                if (j != 0) {
+                    j = lps[j - 1];
+                } else {
+                    i++;
+                }
+            }
+        }
+
+        return matches;
+    }
+
+    public static void main(String[] args) {
+        // Example genomic DNA sequence and target motif pattern
+        String dnaSequence = "AGCTATCGATCGATAGCTAGCTAGCTAGCGATCGATCGATAGCTAGCT";
+        String targetPattern = "GATCGATA";
+
+        System.out.println("=== Intelligent DNA Pattern Search (KMP Algorithm) ===");
+        System.out.println("Target DNA Sequence: " + dnaSequence);
+        System.out.println("Pattern/Motif to Search: " + targetPattern);
+
+        List<Integer> positions = searchDNAPattern(dnaSequence, targetPattern);
+
+        if (positions.isEmpty()) {
+            System.out.println("\nPattern not found in the given DNA sequence.");
+        } else {
+            System.out.println("\nPattern found at 0-based indices: " + positions);
+            for (int pos : positions) {
+                System.out.printf(" -> Match at Index %d: %s%n", 
+                    pos, dnaSequence.substring(pos, pos + targetPattern.length()));
+            }
+        }
+    }
+}
